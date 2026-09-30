@@ -1,0 +1,10 @@
+"use client";
+import {useRef,useState} from "react"; import {Trash2,X,Upload,LockKeyhole} from "lucide-react";
+type Photo={src:string;alt:string};
+export default function OwnerPanel({photos,setPhotos,onClose}:{photos:Photo[];setPhotos:(p:Photo[])=>void;onClose:()=>void}){
+ const [logged,setLogged]=useState(false),[pass,setPass]=useState(""),[error,setError]=useState(""),file=useRef<HTMLInputElement>(null);
+ const login=(e:React.FormEvent)=>{e.preventDefault();if(pass===(process.env.NEXT_PUBLIC_OWNER_PASSWORD||"weta-demo")){setLogged(true);setError("")}else setError("Nieprawidłowe hasło.")};
+ const persist=(p:Photo[])=>{setPhotos(p);localStorage.setItem("weta-gallery",JSON.stringify(p))};
+ const add=(e:React.ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>persist([...photos,{src:String(r.result),alt:"Nowe zdjęcie Weta Cafe"}]);r.readAsDataURL(f);e.target.value=""};
+ return <div className="owner-overlay"><div className="owner"><button className="owner-close" onClick={onClose}><X/></button>{!logged?<form className="login" onSubmit={login}><div className="owner-icon"><LockKeyhole/></div><p className="eyebrow">STREFA WŁAŚCICIELA</p><h2>Zarządzaj galerią</h2><p>Panel demonstracyjny. Zdjęcia są zapisywane lokalnie w tej przeglądarce.</p><input type="password" placeholder="Hasło" value={pass} onChange={e=>setPass(e.target.value)}/><button className="button">Zaloguj się</button>{error&&<small>{error}</small>}<em>Demo: hasło „weta-demo”. Zmień przez NEXT_PUBLIC_OWNER_PASSWORD.</em></form>:<><div className="owner-head"><div><p className="eyebrow">PANEL WŁAŚCICIELA</p><h2>Galeria</h2></div><label className="upload button"><Upload size={16}/> Dodaj zdjęcie<input ref={file} type="file" accept="image/*" onChange={add}/></label></div><div className="owner-grid">{photos.map((p,i)=><div key={p.src+i}><img src={p.src} alt={p.alt}/><button onClick={()=>persist(photos.filter((_,n)=>n!==i))}><Trash2 size={15}/> Usuń</button></div>)}</div></>}</div></div>
+}
